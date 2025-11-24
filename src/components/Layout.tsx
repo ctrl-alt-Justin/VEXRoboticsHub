@@ -201,7 +201,7 @@ export default function Layout() {
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <p className="text-sm font-medium truncate">{member.name}</p>
-                                            <p className="text-xs text-gray-400">{member.role}</p>
+                                            <p className="text-xs text-gray-400">{member.role.charAt(0).toUpperCase() + member.role.slice(1)}</p>
                                         </div>
                                     </motion.div>
                                 ))}

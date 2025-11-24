@@ -84,7 +84,21 @@ export function DataProvider({ children }: { children: ReactNode }) {
             ]);
 
             if (invRes.ok) setInventory(await invRes.json());
-            if (evtRes.ok) setEvents(await evtRes.json());
+            if (evtRes.ok) {
+                const dbEvents = await evtRes.json();
+                // Transform snake_case to camelCase
+                const frontendEvents: Event[] = dbEvents.map((event: any) => ({
+                    id: event.id,
+                    title: event.title,
+                    date: event.event_date,
+                    time: event.event_time,
+                    location: event.location,
+                    description: event.description,
+                    gatherAvailability: event.gather_availability,
+                    attendees: event.attendees || []
+                }));
+                setEvents(frontendEvents);
+            }
             if (actRes.ok) setActivities(await actRes.json());
             if (teamRes.ok) setTeamMembers(await teamRes.json());
         } catch (error) {
@@ -160,14 +174,36 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     const addEvent = async (event: Omit<Event, 'id'>) => {
         try {
+            // Transform camelCase to snake_case for database
+            const dbEvent = {
+                title: event.title,
+                event_date: event.date,
+                event_time: event.time,
+                location: event.location,
+                description: event.description,
+                gather_availability: event.gatherAvailability,
+                attendees: event.attendees
+            };
+
             const res = await fetch('/api/db?table=events', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(event)
+                body: JSON.stringify(dbEvent)
             });
             if (res.ok) {
                 const newEvent = await res.json();
-                setEvents(prev => [...prev, newEvent]);
+                // Transform snake_case back to camelCase for frontend
+                const frontendEvent: Event = {
+                    id: newEvent.id,
+                    title: newEvent.title,
+                    date: newEvent.event_date,
+                    time: newEvent.event_time,
+                    location: newEvent.location,
+                    description: newEvent.description,
+                    gatherAvailability: newEvent.gather_availability,
+                    attendees: event.attendees // Use the attendees from the original event
+                };
+                setEvents(prev => [...prev, frontendEvent]);
                 addActivity({
                     user: 'Current User',
                     action: 'created event',
