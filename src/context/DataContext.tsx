@@ -83,7 +83,19 @@ export function DataProvider({ children }: { children: ReactNode }) {
                 fetch('/api/db?table=team_members')
             ]);
 
-            if (invRes.ok) setInventory(await invRes.json());
+            if (invRes.ok) {
+                const dbInventory = await invRes.json();
+                // Transform snake_case to camelCase
+                const frontendInventory: InventoryItem[] = dbInventory.map((item: any) => ({
+                    id: item.id,
+                    name: item.name,
+                    controlId: item.control_id,
+                    quantity: item.quantity,
+                    status: item.status,
+                    type: item.type
+                }));
+                setInventory(frontendInventory);
+            }
             if (evtRes.ok) {
                 const dbEvents = await evtRes.json();
                 // Transform snake_case to camelCase
@@ -117,14 +129,32 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     const addInventoryItem = async (item: Omit<InventoryItem, 'id'>) => {
         try {
+            // Transform camelCase to snake_case for database
+            const dbItem = {
+                name: item.name,
+                control_id: item.controlId,
+                quantity: item.quantity,
+                status: item.status,
+                type: item.type
+            };
+
             const res = await fetch('/api/db?table=inventory', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(item)
+                body: JSON.stringify(dbItem)
             });
             if (res.ok) {
                 const newItem = await res.json();
-                setInventory(prev => [...prev, newItem]);
+                // Transform snake_case back to camelCase for frontend
+                const frontendItem: InventoryItem = {
+                    id: newItem.id,
+                    name: newItem.name,
+                    controlId: newItem.control_id,
+                    quantity: newItem.quantity,
+                    status: newItem.status,
+                    type: newItem.type
+                };
+                setInventory(prev => [...prev, frontendItem]);
                 addActivity({
                     user: 'Current User',
                     action: 'added new item',
