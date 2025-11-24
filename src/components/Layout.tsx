@@ -149,7 +149,7 @@ export default function Layout() {
                         </div>
                         <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium truncate">{currentUser.name}</p>
-                            <p className="text-xs text-gray-400">{currentUser.role}</p>
+                            <p className="text-xs text-gray-400">{currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1)}</p>
                         </div>
                     </div>
                 </div>

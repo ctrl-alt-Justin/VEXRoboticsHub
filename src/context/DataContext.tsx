@@ -61,6 +61,7 @@ interface DataContextType {
     deleteEvent: (id: number) => void;
 
     addActivity: (activity: Omit<Activity, 'id' | 'time'>) => void;
+    refreshData: () => Promise<void>;
 }
 
 // --- Context ---
@@ -73,27 +74,32 @@ export function DataProvider({ children }: { children: ReactNode }) {
     const [activities, setActivities] = useState<Activity[]>([]);
     const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
 
+    const fetchData = async () => {
+        try {
+            const [invRes, evtRes, actRes, teamRes] = await Promise.all([
+                fetch('/api/db?table=inventory'),
+                fetch('/api/db?table=events'),
+                fetch('/api/db?table=activities'),
+                fetch('/api/db?table=team_members')
+            ]);
+
+            if (invRes.ok) setInventory(await invRes.json());
+            if (evtRes.ok) setEvents(await evtRes.json());
+            if (actRes.ok) setActivities(await actRes.json());
+            if (teamRes.ok) setTeamMembers(await teamRes.json());
+        } catch (error) {
+            console.error('Failed to fetch data:', error);
+        }
+    };
+
     // Fetch initial data
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const [invRes, evtRes, actRes, teamRes] = await Promise.all([
-                    fetch('/api/db?table=inventory'),
-                    fetch('/api/db?table=events'),
-                    fetch('/api/db?table=activities'),
-                    fetch('/api/db?table=team_members')
-                ]);
-
-                if (invRes.ok) setInventory(await invRes.json());
-                if (evtRes.ok) setEvents(await evtRes.json());
-                if (actRes.ok) setActivities(await actRes.json());
-                if (teamRes.ok) setTeamMembers(await teamRes.json());
-            } catch (error) {
-                console.error('Failed to fetch data:', error);
-            }
-        };
         fetchData();
     }, []);
+
+    const refreshData = async () => {
+        await fetchData();
+    };
 
     const addInventoryItem = async (item: Omit<InventoryItem, 'id'>) => {
         try {
@@ -217,7 +223,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
             addEvent,
             updateEvent,
             deleteEvent,
-            addActivity
+            addActivity,
+            refreshData
         }}>
             {children}
         </DataContext.Provider>

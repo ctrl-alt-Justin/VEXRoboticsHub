@@ -4,6 +4,7 @@ import { ArrowRight, AlertCircle } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import { useAuth } from '../context/AuthContext';
+import { useData } from '../context/DataContext';
 
 export default function SignIn() {
     const [email, setEmail] = useState('');
@@ -11,6 +12,7 @@ export default function SignIn() {
     const [error, setError] = useState('');
     const navigate = useNavigate();
     const { login } = useAuth();
+    const { refreshData } = useData();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -18,6 +20,7 @@ export default function SignIn() {
         if (email && password) {
             const success = await login(email);
             if (success) {
+                await refreshData();
                 navigate('/dashboard');
             } else {
                 setError('Invalid email or password (or user not found)');
