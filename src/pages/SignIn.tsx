@@ -3,17 +3,25 @@ import { motion } from 'framer-motion';
 import { ArrowRight, AlertCircle } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
+import { useAuth } from '../context/AuthContext';
+
 export default function SignIn() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const navigate = useNavigate();
+    const { login } = useAuth();
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         // Simple validation for demo
         if (email && password) {
-            navigate('/dashboard');
+            const success = await login(email);
+            if (success) {
+                navigate('/dashboard');
+            } else {
+                setError('Invalid email or password (or user not found)');
+            }
         } else {
             setError('Please fill in all fields');
         }

@@ -12,6 +12,8 @@ const ROLES = [
     { id: 'notebook', name: 'Notebook', icon: BookOpen, color: 'red' }
 ];
 
+import { useAuth } from '../context/AuthContext';
+
 export default function SignUp() {
     const [step, setStep] = useState(1);
     const [formData, setFormData] = useState({
@@ -23,8 +25,9 @@ export default function SignUp() {
     });
     const [error, setError] = useState('');
     const navigate = useNavigate();
+    const { signup } = useAuth();
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (step === 1) {
@@ -49,8 +52,13 @@ export default function SignUp() {
                 setError('Please select a role');
                 return;
             }
-            // Navigate to dashboard
-            navigate('/dashboard');
+
+            try {
+                await signup(formData.name, formData.email, formData.role);
+                navigate('/dashboard');
+            } catch (err) {
+                setError('Failed to create account. Please try again.');
+            }
         }
     };
 
@@ -204,8 +212,8 @@ export default function SignUp() {
                                         whileTap={{ scale: 0.95 }}
                                         onClick={() => setFormData({ ...formData, role: role.id })}
                                         className={`p-6 rounded-xl border-2 transition-all ${formData.role === role.id
-                                                ? `border-${role.color}-500 bg-${role.color}-500/10`
-                                                : 'border-white/10 bg-white/5'
+                                            ? `border-${role.color}-500 bg-${role.color}-500/10`
+                                            : 'border-white/10 bg-white/5'
                                             }`}
                                     >
                                         <role.icon className={`w-8 h-8 mx-auto mb-2 ${formData.role === role.id ? `text-${role.color}-400` : 'text-gray-400'

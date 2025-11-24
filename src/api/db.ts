@@ -107,6 +107,12 @@ export default async function handler(req: any, res: any) {
                 if (error) throw error;
                 return res.status(200).json(data);
             }
+            if (method === 'POST') {
+                const { name, role, status, avatar } = req.body;
+                const { data, error } = await supabase.from('team_members').insert([{ name, role, status, avatar }]).select().single();
+                if (error) throw error;
+                return res.status(201).json(data);
+            }
         }
 
         return res.status(405).json({ error: 'Method not allowed' });
