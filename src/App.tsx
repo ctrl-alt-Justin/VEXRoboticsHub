@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { motion, useMotionValue, useSpring } from 'framer-motion';
-import { ArrowRight, UserCircle, Lightbulb, Gauge, Wrench, Code, BookOpen, Github, Twitter } from 'lucide-react';
+import { ArrowRight, UserCircle, Lightbulb, Wrench, Code, BookOpen, Github, Twitter } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 function App() {
