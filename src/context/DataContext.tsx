@@ -168,10 +168,20 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
     const updateInventoryItem = async (updatedItem: InventoryItem) => {
         try {
+            // Transform camelCase to snake_case for database
+            const dbItem = {
+                id: updatedItem.id,
+                name: updatedItem.name,
+                control_id: updatedItem.controlId,
+                quantity: updatedItem.quantity,
+                status: updatedItem.status,
+                type: updatedItem.type
+            };
+
             const res = await fetch('/api/db?table=inventory', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updatedItem)
+                body: JSON.stringify(dbItem)
             });
             if (res.ok) {
                 setInventory(prev => prev.map(item => item.id === updatedItem.id ? updatedItem : item));

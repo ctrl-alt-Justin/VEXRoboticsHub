@@ -44,6 +44,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 };
                 setUser(user);
                 localStorage.setItem('vex_user', JSON.stringify(user));
+
+                // Update status to online in database
+                await fetch('/api/db?table=team_members', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: userData.id, status: 'online' })
+                });
+
                 return true;
             }
             return false;
@@ -63,7 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 email,
                 password,
                 role,
-                status: 'online',
+                status: 'offline',
                 avatar
             };
 
@@ -87,7 +95,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     };
 
-    const logout = () => {
+    const logout = async () => {
+        if (user) {
+            // Update status to offline in database
+            try {
+                await fetch('/api/db?table=team_members', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: user.id, status: 'offline' })
+                });
+            } catch (error) {
+                console.error('Error updating status:', error);
+            }
+        }
         setUser(null);
         localStorage.removeItem('vex_user');
     };
