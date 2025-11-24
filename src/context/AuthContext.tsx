@@ -11,8 +11,8 @@ interface User {
 
 interface AuthContextType {
     user: User | null;
-    login: (email: string) => Promise<boolean>;
-    signup: (name: string, email: string, role: string) => Promise<void>;
+    login: (email: string, password: string) => Promise<boolean>;
+    signup: (name: string, email: string, password: string, role: string) => Promise<void>;
     logout: () => void;
 }
 
@@ -24,36 +24,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return savedUser ? JSON.parse(savedUser) : null;
     });
 
-    const login = async (email: string) => {
+    const login = async (email: string, password: string) => {
         try {
-            // In a real app, we would verify password here.
-            // For now, we just check if the user exists in our team_members table
-            const res = await fetch('/api/db?table=team_members');
-            const members: TeamMember[] = await res.json();
+            // Call authentication API endpoint
+            const res = await fetch('/api/auth', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
 
-            // Find member by name (since we don't have email in team_members table yet, 
-            // we might need to rely on name or add email to team_members schema later.
-            // For this demo, let's assume we match by name or just simulate login)
-
-            // actually, let's just look for a member with a matching name for now as a fallback
-            // or better, let's just allow login if we find them.
-
-            // Wait, the team_members table doesn't have email. 
-            // We should probably add email to team_members or just store it locally.
-            // For now, to make it work with existing schema:
-
-            const foundMember = members.find(m => m.name.toLowerCase() === email.toLowerCase() || m.name.toLowerCase().includes(email.split('@')[0].toLowerCase()));
-
-            if (foundMember) {
-                const userData = {
-                    id: foundMember.id,
-                    name: foundMember.name,
-                    email: email,
-                    role: foundMember.role,
-                    avatar: foundMember.avatar || foundMember.name.substring(0, 2).toUpperCase()
+            if (res.ok) {
+                const userData = await res.json();
+                const user: User = {
+                    id: userData.id,
+                    name: userData.name,
+                    email: userData.email,
+                    role: userData.role,
+                    avatar: userData.avatar || userData.name.substring(0, 2).toUpperCase()
                 };
-                setUser(userData);
-                localStorage.setItem('vex_user', JSON.stringify(userData));
+                setUser(user);
+                localStorage.setItem('vex_user', JSON.stringify(user));
                 return true;
             }
             return false;
@@ -63,41 +53,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     };
 
-    const signup = async (name: string, email: string, role: string) => {
-        // 1. Create avatar initials
+    const signup = async (name: string, email: string, password: string, role: string) => {
+        // Create avatar initials
         const avatar = name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
 
-        // 2. Add to team_members table via API
         try {
             const newMember = {
                 name,
+                email,
+                password,
                 role,
                 status: 'online',
                 avatar
             };
 
-            const res = await fetch('/api/db?table=team_members', { // Note: we need to handle POST for team_members in API
+            const res = await fetch('/api/db?table=team_members', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newMember)
             });
 
-            if (res.ok) {
-                const savedMember = await res.json();
-                const userData = {
-                    id: savedMember.id,
-                    name: savedMember.name,
-                    email: email,
-                    role: savedMember.role,
-                    avatar: savedMember.avatar
-                };
-                setUser(userData);
-                localStorage.setItem('vex_user', JSON.stringify(userData));
-            } else {
-                console.error('Failed to save team member');
+            if (!res.ok) {
+                const error = await res.json();
+                throw new Error(error.error || 'Failed to create account');
             }
+
+            // Don't auto-login after signup, let user sign in
+            // const savedMember = await res.json();
+            // ... removed auto-login code
         } catch (error) {
             console.error('Signup error:', error);
+            throw error;
         }
     };
 

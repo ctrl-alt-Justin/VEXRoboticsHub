@@ -55,11 +55,15 @@ export default function SignUp() {
             }
 
             try {
-                await signup(formData.name, formData.email, formData.role);
-                await refreshData();
-                navigate('/dashboard');
+                await signup(formData.name, formData.email, formData.password, formData.role);
+                // Navigate to sign-in page after successful signup
+                navigate('/signin', {
+                    state: {
+                        message: 'Account created successfully! Please sign in with your credentials.'
+                    }
+                });
             } catch (err) {
-                setError('Failed to create account. Please try again.');
+                setError('Failed to create account. Email may already be in use.');
             }
         }
     };

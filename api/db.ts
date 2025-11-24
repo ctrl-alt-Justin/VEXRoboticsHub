@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import bcrypt from 'bcryptjs';
 
 // Environment variables
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -108,10 +109,32 @@ export default async function handler(req: any, res: any) {
                 return res.status(200).json(data);
             }
             if (method === 'POST') {
-                const { name, role, status, avatar } = req.body;
-                const { data, error } = await supabase.from('team_members').insert([{ name, role, status, avatar }]).select().single();
+                const { name, email, password, role, status, avatar } = req.body;
+
+                // Validate required fields
+                if (!email || !password) {
+                    return res.status(400).json({ error: 'Email and password are required' });
+                }
+
+                // Hash password
+                const saltRounds = 10;
+                const password_hash = await bcrypt.hash(password, saltRounds);
+
+                // Insert user with hashed password
+                const { data, error } = await supabase.from('team_members').insert([{
+                    name,
+                    email: email.toLowerCase(),
+                    password_hash,
+                    role,
+                    status: status || 'online',
+                    avatar
+                }]).select().single();
+
                 if (error) throw error;
-                return res.status(201).json(data);
+
+                // Return user data without password hash
+                const { password_hash: _, ...userData } = data;
+                return res.status(201).json(userData);
             }
         }
 

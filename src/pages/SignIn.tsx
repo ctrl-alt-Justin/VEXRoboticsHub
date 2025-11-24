@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, AlertCircle } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
@@ -10,20 +10,33 @@ export default function SignIn() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
     const navigate = useNavigate();
+    const location = useLocation();
     const { login } = useAuth();
     const { refreshData } = useData();
 
+    // Check for success message from signup
+    useEffect(() => {
+        if (location.state?.message) {
+            setSuccess(location.state.message);
+            // Clear the state
+            window.history.replaceState({}, document.title);
+        }
+    }, [location]);
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Simple validation for demo
+        setError('');
+        setSuccess('');
+
         if (email && password) {
-            const success = await login(email);
+            const success = await login(email, password);
             if (success) {
                 await refreshData();
                 navigate('/dashboard');
             } else {
-                setError('Invalid email or password (or user not found)');
+                setError('Invalid email or password');
             }
         } else {
             setError('Please fill in all fields');
@@ -75,6 +88,13 @@ export default function SignIn() {
                     <h1 className="text-3xl font-bold">Welcome Back</h1>
                     <p className="text-gray-400 mt-2">Sign in to VEX Robotics Hub</p>
                 </div>
+
+                {success && (
+                    <div className="mb-6 p-4 bg-green-500/10 border border-green-500/50 rounded-lg flex items-center gap-2 text-green-400">
+                        <AlertCircle className="w-5 h-5" />
+                        {success}
+                    </div>
+                )}
 
                 {error && (
                     <div className="mb-6 p-4 bg-red-500/10 border border-red-500/50 rounded-lg flex items-center gap-2 text-red-400">
