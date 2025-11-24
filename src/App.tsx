@@ -95,7 +95,7 @@ function App() {
                         <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-orange-500 rounded-lg flex items-center justify-center">
                             <span className="text-white font-bold text-sm">VEX</span>
                         </div>
-                        <span>VEX Robotics Hub</span>
+                        <span>CDM VEX Robotics Hub</span>
                     </motion.div>
                     <div className="hidden md:flex items-center gap-8 text-sm text-gray-400">
                         <a href="#roles" className="hover:text-white transition-colors">Roles</a>
